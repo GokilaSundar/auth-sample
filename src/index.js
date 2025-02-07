@@ -1,14 +1,23 @@
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import express from "express";
+import { createServer } from "https";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 import { User } from "./User.js";
+import { readFileSync } from "fs";
 
 const JWT_SECRET = process.env.JWT_SECRET || "SecretPassword@123";
 
 const app = express();
+const server = createServer(
+  {
+    cert: readFileSync("./localhost.pem"),
+    key: readFileSync("./localhost-key.pem"),
+  },
+  app
+);
 
 app.use(express.json()); // Parse body from JSON payload
 app.use(cookieParser()); // Parse cookies as object from header
@@ -129,7 +138,7 @@ mongoose
   .then(() => {
     console.log("Database connected!");
 
-    app.listen(5000, () => {
+    server.listen(5000, () => {
       console.log("Server started at 5000!");
     });
   })
