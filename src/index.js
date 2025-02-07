@@ -114,7 +114,12 @@ app.use(async (req, res, next) => {
 app.get("/api/me", async (req, res) => {
   const userId = req.userId;
 
-  const currentUser = await User.findOne({ _id: userId });
+  const currentUser = await User.findOne(
+    { _id: userId },
+    {
+      password: false,
+    }
+  );
 
   res.send(currentUser);
 });
