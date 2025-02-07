@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 
 import { User } from "./User.js";
 
+const JWT_SECRET = process.env.JWT_SECRET || "SecretPassword@123";
+
 const app = express();
 
 app.use(express.json()); // Parse body from JSON payload
@@ -73,11 +75,48 @@ app.post("/api/login", async (req, res) => {
     {
       userId: existingUser._id,
     },
-    process.env.JWT_SECRET || "SecretPassword@123",
+    JWT_SECRET,
     { expiresIn: "30s" }
   );
 
   res.cookie("token", token).send({ message: "Login successful!" });
+});
+
+// Implement auth middleware
+app.use(async (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).send({
+      message: "Login required!",
+    });
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+
+    req.userId = payload.userId;
+
+    next();
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).send({
+        message: "Token expired!",
+      });
+    } else {
+      return res.status(401).send({
+        message: "Invalid token!",
+      });
+    }
+  }
+});
+
+app.get("/api/me", async (req, res) => {
+  const userId = req.userId;
+
+  const currentUser = await User.findOne({ _id: userId });
+
+  res.send(currentUser);
 });
 
 mongoose
