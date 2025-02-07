@@ -88,7 +88,12 @@ app.post("/api/login", async (req, res) => {
     { expiresIn: "30s" }
   );
 
-  res.cookie("token", token).send({ message: "Login successful!" });
+  res
+    .cookie("token", token, {
+      secure: true,
+      httpOnly: true,
+    })
+    .send({ message: "Login successful!" });
 });
 
 // Implement auth middleware
